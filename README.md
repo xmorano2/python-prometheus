@@ -5,14 +5,14 @@ Here you will find how to get statistics from Prometheus to get the namespace co
 As the data gathered is taken using three different Prometheus queries, a consolidation will also need to obtain only one report with all the data.
 
 You can get the statistics using two different options:
-- **Option 1**: Using [Python](#option-1-using-python) as described below to obtain the report in one step, just executing [this program](https://gitlab.cee.redhat.com/xmorano/python-prometheus/-/blob/main/prom.py)
+- **Option 1**: Using [Python](#option-1-using-python) as described below to obtain the report in one step, just executing [this program](prom.py)
 - **Option 2**: From [command line](#option-2-command-line), and using curl and join programs as shown below.
 
 Both options should be executed on every cluster, and must have access to the *oc* command to get the needed parameters to connect to the Prometheus API.
 
 # Option 1: Using Python
 
-This [Python program](https://gitlab.cee.redhat.com/xmorano/python-prometheus/-/blob/main/prom.py) uses the Prometheus API rest to get the data using three different queries:
+This [Python program](prom.py) uses the Prometheus API rest to get the data using three different queries:
 * cpu: \
     `sum by(namespace) (rate(container_cpu_usage_seconds_total{container!="",container_name!="POD"}[5m]))`
 * memory: \
