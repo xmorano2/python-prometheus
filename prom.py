@@ -1,30 +1,52 @@
 import os
+import imp
 import sys
 import json
 import time
-#import base64
 import logging
 import datetime
-import requests  
-import subprocess
+import requests  # Available in 3.7+
+#import subprocess
 from datetime import date
-#from base64 import b64encode
-from http.client import HTTPSConnection
-#from dateutil.relativedelta import relativedelta
+#from http.client import HTTPSConnection # Available in 2.7 or v3.4+
 
-major = sys.version_info[0]
-minor = sys.version_info[1]
-
-if major < 3:
-    raise Exception("Must be using Python 3")
-
-if major == 3 and minor < 4:
-    raise Exception("Must be using Python 3.4 at least")
 
 
 # There are five levels, from the highest urgency to lowest urgency, are: 
 #   CRITICAL, ERROR, WARNING, INFO, DEBUG
 logging.basicConfig(level=logging.WARNING)
+
+# Get VARs from SO
+if os.getenv("SECRET"):
+    secret = os.getenv("SECRET")
+    logging.info ("From OS get SECRET [" + secret + "]")
+else:
+    print ("SECRET variable not defined, you need to export it")
+    print ("export SECRET=`oc get secret -n openshift-monitoring | grep  prometheus-k8s-token | head -n 1 | awk '{ print $1 }'`")
+    exit (1)
+
+logging.info ("SECRET [" + str(secret) + "]")
+
+if os.getenv("TOKEN"):
+    token = os.getenv("TOKEN")
+    logging.info ("From OS get TOKEN [" + token + "]")
+else:
+    print ("TOKEN variable not defined, you need to export it")
+    print ("export TOKEN=`echo $(oc get secret $SECRET -n openshift-monitoring -o json | jq -r '.data.token') | base64 -d`")
+    exit (1)
+
+logging.info ("\nTOKEN [" + str(token) + "]")
+
+if os.getenv("PROMETHEUS_HOST"):
+    prometheus_host = os.getenv("PROMETHEUS_HOST")
+    logging.info ("From OS get PROMETHEUS_HOST [" + prometheus_host + "]")
+else:
+    print ("PROMETHEUS_HOST variable not defined, you need to export it")
+    print ("export PROMETHEUS_HOST=`oc get route prometheus-k8s -n openshift-monitoring -o json | jq -r '.spec.host'`")
+    exit (1)
+
+logging.info ("PROMETHEUS [" + str(prometheus_host) + "]")
+
 
 my_date = datetime.date.today() 
 year, week_num, day_of_week = my_date.isocalendar()
@@ -41,61 +63,6 @@ print("\tEnd date   : [" + str(end) + "]")
 print ("-" * 33)
 
 # https://developpaper.com/python-calls-prometheus-to-monitor-data-and-calculate/
-
-if os.getenv("SECRET"):
-    secret = os.getenv("SECRET")
-    logging.info ("From OS get SECRET [" + secret + "]")
-else:
-    secret = subprocess.run ("oc --insecure-skip-tls-verify=true get secret -n openshift-monitoring | grep  prometheus-k8s-token | head -n 1 | awk '{ print $1 }'", shell = True, capture_output = True, text = True)
-
-    if secret.stdout == '':
-        logging.critical ("Not able to get the secret name")
-        if secret.stderr != '':
-            logging.critical ("Error received [" + secret.stderr[:-1] + "]")
-        logging.critical ("Exiting")
-        exit (1)
-    else:
-        secret = secret.stdout[:-1]
-
-logging.info ("SECRET [" + str(secret) + "]")
-
-if os.getenv("TOKEN"):
-    token = os.getenv("TOKEN")
-    logging.info ("From OS get TOKEN [" + token + "]")
-else:
-    token = subprocess.run ("oc --insecure-skip-tls-verify=true get secret " + secret + " -n openshift-monitoring -o json | jq -r '.data.token' | base64 -d", shell = True, capture_output = True, text = True)
-    if token.stdout == '':
-        logging.critical ("Not able to get the token value")
-        if token.stderr != '':
-            logging.critical ("Error received [" + token.stderr[:-1] + "]")
-        logging.critical ("Exiting")
-        exit (1)
-    else:
-        token = token.stdout
-        logging.info ("TOKEN [" + token + "]")
-logging.info ("\nTOKEN [" + str(token) + "]")
-
-
-
-
-
-if os.getenv("PROMETHEUS_HOST"):
-    prometheus_host = os.getenv("PROMETHEUS_HOST")
-    logging.info ("From OS get PROMETHEUS_HOST [" + prometheus_host + "]")
-else:
-    prometheus_host = subprocess.run ("oc --insecure-skip-tls-verify=true get route prometheus-k8s -n openshift-monitoring -o jsonpath='{.spec.host}'", shell = True, capture_output = True, text = True)
-    logging.info ("PROMETHEUS [" + str(prometheus_host) + "]")
-
-    if prometheus_host.stdout == '':
-        logging.critical ("Not able to get the Prometheus host")
-        if prometheus_host.stderr != '':
-            logging.critical ("Error received [" + prometheus_host.stderr[:-1] + "]")
-        logging.critical ("Exiting")
-        exit (1)
-    else:
-        prometheus_host = prometheus_host.stdout
-
-logging.info ("PROMETHEUS [" + str(prometheus_host) + "]")
 
 
 # export SECRET=`oc get secret -n openshift-monitoring | grep  prometheus-k8s-token | head -n 1 | awk '{ print $1 }'`
@@ -222,5 +189,4 @@ print ("\n\n")
 print ("---------------------------------------")
 print ("Statistics stored in [" + filename + "]")
 print ("---------------------------------------")
-
 
