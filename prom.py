@@ -3,18 +3,52 @@ import imp
 import sys
 import json
 import time
+import urllib3
 import logging
 import datetime
+import argparse
 import requests  # Available in 3.7+
-#import subprocess
-from datetime import date
-#from http.client import HTTPSConnection # Available in 2.7 or v3.4+
+from datetime import date,datetime,timedelta
 
+
+# Parse arguments
+parser = argparse.ArgumentParser()
+parser.add_argument ('--start', dest='start_date', type = str, help = 'Start date to get statistics (YYYY-MM-DD)')
+parser.add_argument ('--end', dest='end_date', type = str, help = 'End date to get statistics (YYYY-MM-DD)')
+parser.add_argument ('--cluster', dest='cluster_name', type = str, help = 'Cluster name')
+args = parser.parse_args()
+
+
+today = date.today()
+
+if args.start_date:
+	start = datetime.strptime (args.start_date, '%Y-%m-%d').date()
+else:
+	start = today - timedelta(days=7) # today.weekday())
+
+if args.end_date:
+	end = datetime.strptime (args.end_date, '%Y-%m-%d').date()
+else:
+	end = today + timedelta(days=-1) #today.weekday(), weeks=1)
+
+if args.cluster_name:
+	cluster = args.cluster_name
+else:
+	cluster = 'local'
+
+print ("Start date [" + str(start) + "] -> end [" + str(end) + "]")
+
+if start > end:
+	print ("Start date [" + str(start) + "] should be before end date [" + str(end) + "]")
+	exit (1)
 
 
 # There are five levels, from the highest urgency to lowest urgency, are: 
 #   CRITICAL, ERROR, WARNING, INFO, DEBUG
 logging.basicConfig(level=logging.WARNING)
+
+# disable InsecureRequestWarning: Unverified HTTPS request is being made
+urllib3.disable_warnings()
 
 # Get VARs from SO
 if os.getenv("SECRET"):
@@ -48,15 +82,7 @@ else:
 logging.info ("PROMETHEUS [" + str(prometheus_host) + "]")
 
 
-my_date = datetime.date.today() 
-year, week_num, day_of_week = my_date.isocalendar()
-print("Week #" + str(week_num) + " of year " + str(year))
 
-today = date.today()
-start = today - datetime.timedelta(days=7) # today.weekday())
-end = today + datetime.timedelta(days=-1) #today.weekday(), weeks=1)
-
-print("Today:", today)
 print("Querying statistics for this period:")
 print("\tStart date : [" + str(start) + "]")
 print("\tEnd date   : [" + str(end) + "]")
@@ -156,11 +182,11 @@ for result in results:
 filename = "/var/tmp/statistics.csv"
 file = open (filename, "a")
 
-print ("%4s | %20s | %20s | %50s | %25s | %20s | %15s | %15s | %15s" % ('week', 'start date', 'end date', 'namespace', 'cpu', 'mem', 'Project Name', 'Billing TCFKey', 'Billing UTRKey'))
+print ("%10s | %20s | %20s | %50s | %25s | %20s | %15s | %15s | %15s" % ('cluster', 'start date', 'end date', 'namespace', 'cpu', 'mem', 'Project Name', 'Billing TCFKey', 'Billing UTRKey'))
 print ("-" * 208)
 for namespace in data:
-    file.write ("%d,%s,%s,%s,%s,%s,%s,%s,%s\n" % (
-            week_num,
+    file.write ("%s,%s,%s,%s,%s,%s,%s,%s,%s\n" % (
+            cluster,
             start,
             end,
             namespace, 
@@ -171,8 +197,8 @@ for namespace in data:
             data[namespace]['billing_utrkey'])
     )
 
-    print ("%4d | %20s | %20s | %50s | %25s | %20s | %15s | %15s | %15s" % (
-            week_num,
+    print ("%10s | %20s | %20s | %50s | %25s | %20s | %15s | %15s | %15s" % (
+            cluster,
             start,
             end,
             namespace, 
@@ -189,4 +215,5 @@ print ("\n\n")
 print ("---------------------------------------")
 print ("Statistics stored in [" + filename + "]")
 print ("---------------------------------------")
+
 
