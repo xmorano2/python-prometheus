@@ -11,37 +11,31 @@ import requests  # Available in 3.7+
 from datetime import date,datetime,timedelta
 
 
-# Parse arguments
-parser = argparse.ArgumentParser()
-parser.add_argument ('--start', dest='start_date', type = str, help = 'Start date to get statistics (YYYY-MM-DD)')
-parser.add_argument ('--end', dest='end_date', type = str, help = 'End date to get statistics (YYYY-MM-DD)')
-parser.add_argument ('--cluster', dest='cluster_name', type = str, help = 'Cluster name')
-args = parser.parse_args()
-
-
 today = date.today()
 
+# Parse arguments
+parser = argparse.ArgumentParser(description = "Python program to extract memory and cpu consumption from Prometheus, as well as the labels asociated to each namespace")
+parser.add_argument ('--start', dest='start_date', type = str, default = str(today - timedelta(days=7)), help = 'Start date to get statistics (YYYY-MM-DD), default is "today - 7 days"')
+parser.add_argument ('--end', dest='end_date', type = str, default = str(today + timedelta(days=-1)), help = 'End date to get statistics (YYYY-MM-DD), default is the day of today')
+parser.add_argument ('--cluster', dest='cluster_name', type = str, default = 'local', help = 'Cluster name, default is "local"')
+args = parser.parse_args()
+
+print (args)
+
 if args.start_date:
-	start = datetime.strptime (args.start_date, '%Y-%m-%d').date()
-else:
-	start = today - timedelta(days=7) # today.weekday())
+        start = datetime.strptime (args.start_date, '%Y-%m-%d').date()
 
 if args.end_date:
-	end = datetime.strptime (args.end_date, '%Y-%m-%d').date()
-else:
-	end = today + timedelta(days=-1) #today.weekday(), weeks=1)
+        end = datetime.strptime (args.end_date, '%Y-%m-%d').date()
 
 if args.cluster_name:
-	cluster = args.cluster_name
-else:
-	cluster = 'local'
+        cluster = args.cluster_name
 
 print ("Start date [" + str(start) + "] -> end [" + str(end) + "]")
 
 if start > end:
-	print ("Start date [" + str(start) + "] should be before end date [" + str(end) + "]")
-	exit (1)
-
+        print ("Start date [" + str(start) + "] should be before end date [" + str(end) + "]")
+        exit (1)
 
 # There are five levels, from the highest urgency to lowest urgency, are: 
 #   CRITICAL, ERROR, WARNING, INFO, DEBUG
