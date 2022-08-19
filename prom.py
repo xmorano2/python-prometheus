@@ -1,5 +1,4 @@
 import os
-import imp
 import sys
 import json
 import time
@@ -171,12 +170,33 @@ for result in results:
             data[namespace][label] = ''
 
 
+headersFile = {
+                    # memory var    : header 
+                    'project_name'  : 'Name Space',
+                    'mem'           : 'Memory',
+                    'cpu'           : 'CPU',
+                    'tcfkey'        : 'TCKey',
+                    'utrkey'        : 'BillingApplicationName',
+}
+
+        
 # File to store statistics, append mode
 
 filename = "/var/tmp/statistics.csv"
 file = open (filename, "a")
 
-print ("%10s | %20s | %20s | %50s | %25s | %20s | %15s | %15s | %15s" % ('cluster', 'start date', 'end date', 'namespace', 'cpu', 'mem', 'Project Name', 'Billing TCFKey', 'Billing UTRKey'))
+file.write ("%s,%s,%s,%s,%s,%s,%s,%s,%s\n" % (
+    'cluster', 
+    'start date',
+    'end date', 
+    headersFile['project_name'],
+    headersFile['cpu'],
+    headersFile['mem'],
+    'Project Name',
+    headersFile['tcfkey'],
+    headersFile['utrkey'])
+)
+
 print ("-" * 208)
 for namespace in data:
     file.write ("%s,%s,%s,%s,%s,%s,%s,%s,%s\n" % (
