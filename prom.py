@@ -19,8 +19,6 @@ parser.add_argument ('--end', dest='end_date', type = str, default = str(today +
 parser.add_argument ('--cluster', dest='cluster_name', type = str, default = 'local', help = 'Cluster name, default is "local"')
 args = parser.parse_args()
 
-print (args)
-
 if args.start_date:
         start = datetime.strptime (args.start_date, '%Y-%m-%d').date()
 
