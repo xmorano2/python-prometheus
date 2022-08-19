@@ -195,6 +195,17 @@ file.write ("%s,%s,%s,%s,%s,%s,%s,%s,%s\n" % (
     headersFile['utrkey'])
 )
 
+print ("%10s | %20s | %20s | %50s | %25s | %20s | %15s | %15s | %15s" % (
+    'cluster',
+    'start date',
+    'end date',
+    headersFile['project_name'],
+    headersFile['cpu'],
+    headersFile['mem'],
+    'Project Name',
+    headersFile['tcfkey'],
+    headersFile['utrkey'])
+)
 print ("-" * 208)
 for namespace in data:
     file.write ("%s,%s,%s,%s,%s,%s,%s,%s,%s\n" % (
